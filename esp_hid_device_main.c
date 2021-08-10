@@ -27,7 +27,7 @@
 #include "esp_hidd.h"
 #include "esp_hid_gap.h"
 
-static const char *TAG = "HID_DEV_DEMO";
+static const char *TAG = "BKG_MUTER";
 
 const unsigned char hidapiReportMap[] = { //8 bytes input, 8 bytes feature
     0x06, 0x00, 0xFF,  // Usage Page (Vendor Defined 0xFF00)
@@ -39,16 +39,68 @@ const unsigned char hidapiReportMap[] = { //8 bytes input, 8 bytes feature
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x08,        //   Report Count (8)
     0x09, 0x01,        //   Usage (0x01)
-    0x82, 0x02, 0x01,  //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Buffered Bytes)
+    0x82, 0x02, 0x01,  //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,
+                       //          No Null Position,Buffered Bytes)
     0x95, 0x08,        //   Report Count (8)
     0x09, 0x02,        //   Usage (0x02)
-    0xB2, 0x02, 0x01,  //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile,Buffered Bytes)
+    0xB2, 0x02, 0x01,  //   Feature (Data,Var,Abs,No Wrap,Linear,
+                       //            Preferred State,No Null Position,
+                       //            Non-volatile,Buffered Bytes)
     0x95, 0x08,        //   Report Count (8)
     0x09, 0x03,        //   Usage (0x03)
-    0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+    0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,
+                       //           Preferred State,No Null Position,
+                       //           Non-volatile)
     0xC0,              // End Collection
-
     // 38 bytes
+};
+
+const unsigned char hidkeyboardReportMap[] = {
+    0x05, 0x01,  // Usage Pg (Generic Desktop)
+    0x09, 0x06,  // Usage (Keyboard)
+    0xA1, 0x01,  // Collection: (Application)
+    0x85, 0x02,  // Report Id (2)
+
+    0x05, 0x07,  //   Usage Pg (Key Codes)
+    0x19, 0xE0,  //   Usage Min (224)
+    0x29, 0xE7,  //   Usage Max (231)
+    0x15, 0x00,  //   Log Min (0)
+    0x25, 0x01,  //   Log Max (1)
+
+    //   Modifier byte
+    0x75, 0x01,  //   Report Size (1)
+    0x95, 0x08,  //   Report Count (8)
+    0x81, 0x02,  //   Input: (Data, Variable, Absolute)
+
+    //   Reserved byte
+    0x95, 0x01,  //   Report Count (1)
+    0x75, 0x08,  //   Report Size (8)
+    0x81, 0x01,  //   Input: (Constant)
+
+    //   LED report
+    0x95, 0x05,  //   Report Count (5)
+    0x75, 0x01,  //   Report Size (1)
+    0x05, 0x08,  //   Usage Pg (LEDs)
+    0x19, 0x01,  //   Usage Min (1)
+    0x29, 0x05,  //   Usage Max (5)
+    0x91, 0x02,  //   Output: (Data, Variable, Absolute)
+
+    //   LED report padding
+    0x95, 0x01,  //   Report Count (1)
+    0x75, 0x03,  //   Report Size (3)
+    0x91, 0x01,  //   Output: (Constant)
+
+    //   Key arrays (6 bytes)
+    0x95, 0x06,  //   Report Count (6)
+    0x75, 0x08,  //   Report Size (8)
+    0x15, 0x00,  //   Log Min (0)
+    0x25, 0x65,  //   Log Max (101)
+    0x05, 0x07,  //   Usage Pg (Key Codes)
+    0x19, 0x00,  //   Usage Min (0)
+    0x29, 0x65,  //   Usage Max (101)
+    0x81, 0x00,  //   Input: (Data, Array)
+
+    0xC0,        // End Collection
 };
 
 const unsigned char mediaReportMap[] = {
@@ -65,7 +117,8 @@ const unsigned char mediaReportMap[] = {
     0x25, 0x0A,        //     Logical Maximum (10)
     0x75, 0x04,        //     Report Size (4)
     0x95, 0x01,        //     Report Count (1)
-    0x81, 0x00,        //     Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x00,        //     Input (Data,Array,Abs,No Wrap,Linear,
+                       //            Preferred State,No Null Position)
     0xC0,              //   End Collection
     0x05, 0x0C,        //   Usage Page (Consumer)
     0x09, 0x86,        //   Usage (Channel)
@@ -73,13 +126,15 @@ const unsigned char mediaReportMap[] = {
     0x25, 0x01,        //   Logical Maximum (1)
     0x75, 0x02,        //   Report Size (2)
     0x95, 0x01,        //   Report Count (1)
-    0x81, 0x46,        //   Input (Data,Var,Rel,No Wrap,Linear,Preferred State,Null State)
+    0x81, 0x46,        //   Input (Data,Var,Rel,No Wrap,Linear,Preferred State,
+                       //          Null State)
     0x09, 0xE9,        //   Usage (Volume Increment)
     0x09, 0xEA,        //   Usage (Volume Decrement)
     0x15, 0x00,        //   Logical Minimum (0)
     0x75, 0x01,        //   Report Size (1)
     0x95, 0x02,        //   Report Count (2)
-    0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,
+                       //          No Null Position)
     0x09, 0xE2,        //   Usage (Mute)
     0x09, 0x30,        //   Usage (Power)
     0x09, 0x83,        //   Usage (Recall Last)
@@ -96,7 +151,8 @@ const unsigned char mediaReportMap[] = {
     0x25, 0x0C,        //   Logical Maximum (12)
     0x75, 0x04,        //   Report Size (4)
     0x95, 0x01,        //   Report Count (1)
-    0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,
+                       //          Preferred State,No Null Position)
     0x09, 0x80,        //   Usage (Selection)
     0xA1, 0x02,        //   Collection (Logical)
     0x05, 0x09,        //     Usage Page (Button)
@@ -105,32 +161,43 @@ const unsigned char mediaReportMap[] = {
     0x15, 0x01,        //     Logical Minimum (1)
     0x25, 0x03,        //     Logical Maximum (3)
     0x75, 0x02,        //     Report Size (2)
-    0x81, 0x00,        //     Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x00,        //     Input (Data,Array,Abs,No Wrap,Linear,
+                       //            Preferred State,No Null Position)
     0xC0,              //   End Collection
-    0x81, 0x03,        //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x03,        //   Input (Const,Var,Abs,No Wrap,Linear,
+                       //          Preferred State,No Null Position)
     0xC0,              // End Collection
 };
 
 static esp_hid_raw_report_map_t report_maps[] = {
+    
     {
         .data = hidapiReportMap,
         .len = sizeof(hidapiReportMap)
     },
+   
+    {
+        .data = hidkeyboardReportMap,
+        .len = sizeof(hidkeyboardReportMap)
+    },
+    
     {
         .data = mediaReportMap,
         .len = sizeof(mediaReportMap)
     }
+    
+     
 };
 
 static esp_hid_device_config_t hid_config = {
     .vendor_id          = 0x16C0,
     .product_id         = 0x05DF,
     .version            = 0x0100,
-    .device_name        = "ESP BLE HID2",
-    .manufacturer_name  = "Espressif",
+    .device_name        = "Brads Muter",
+    .manufacturer_name  = "Brad",
     .serial_number      = "1234567890",
     .report_maps        = report_maps,
-    .report_maps_len    = 2
+    .report_maps_len    = 3
 };
 
 static esp_hidd_dev_t *hid_dev = NULL;
@@ -210,6 +277,36 @@ static bool dev_connected = false;
 
 #define HID_RPT_ID_CC_IN        3   // Consumer Control input report ID
 #define HID_CC_IN_RPT_LEN       2   // Consumer Control input report Len
+
+void esp_hidd_send_numeric_value(uint8_t key_cmd, bool key_pressed)
+{
+    uint8_t buffer[HID_CC_IN_RPT_LEN] = {0, 0};
+    if (key_pressed) {
+        HID_CC_RPT_SET_NUMERIC(buffer, key_cmd);
+    }    
+    esp_hidd_dev_input_set(hid_dev, 1, HID_RPT_ID_CC_IN, buffer, HID_CC_IN_RPT_LEN);
+    return;
+}
+void esp_hidd_send_key(uint8_t key_cmd, bool key_pressed)
+{
+    uint8_t buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    static unsigned char cc=1;
+    if (key_pressed) {
+        buffer[0] = cc++;
+        buffer[1] = cc++;
+        buffer[2] = cc++;
+        buffer[3] = cc++;
+        buffer[4] = cc++;
+        buffer[5] = cc++;
+        buffer[6] = cc++;
+        buffer[7] = cc++;
+        ESP_LOGI(TAG,"WAX_ON");
+    }    else
+        ESP_LOGI(TAG,"WAX_OFF");
+    esp_hidd_dev_input_set(hid_dev, 1, 2, buffer, 8);
+    ESP_LOG_BUFFER_HEX(TAG, buffer, 8);
+    return;
+}
 void esp_hidd_send_consumer_value(uint8_t key_cmd, bool key_pressed)
 {
     uint8_t buffer[HID_CC_IN_RPT_LEN] = {0, 0};
@@ -312,7 +409,8 @@ static void hidd_event_callback(void *handler_args, esp_event_base_t base, int32
         break;
     }
     case ESP_HIDD_OUTPUT_EVENT: {
-        ESP_LOGI(TAG, "OUTPUT[%u]: %8s ID: %2u, Len: %d, Data:", param->output.map_index, esp_hid_usage_str(param->output.usage), param->output.report_id, param->output.length);
+        ESP_LOGI(TAG, "OUTPUT[%u]: %8s ID: %2u, Len: %d, Data:", param->output.map_index, esp_hid_usage_str(param->output.usage),
+         param->output.report_id, param->output.length);
         ESP_LOG_BUFFER_HEX(TAG, param->output.data, param->output.length);
         break;
     }
@@ -344,13 +442,19 @@ void hid_demo_task(void *pvParameters)
         if (dev_connected) {
             ESP_LOGI(TAG, "Send the volume");
             if (send_volum_up) {
-                esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_UP, true);
+                //esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_UP, true);
+                //esp_hidd_send_numeric_value(2, true);
+                esp_hidd_send_key(0x04,true);
                 vTaskDelay(100 / portTICK_PERIOD_MS);
-                esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_UP, false);
+                //esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_UP, false);
+                esp_hidd_send_key(0x04,false);
             } else {
-                esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_DOWN, true);
+                //esp_hidd_send_numeric_value(3, true);
+                //esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_DOWN, true);
+                esp_hidd_send_key(0x17,true);
                 vTaskDelay(100 / portTICK_PERIOD_MS);
-                esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_DOWN, false);
+                //esp_hidd_send_consumer_value(HID_CONSUMER_VOLUME_DOWN, false);
+                esp_hidd_send_key(0x17,false);
             }
             send_volum_up = !send_volum_up;
         }
@@ -368,12 +472,7 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( ret );
 
-#if CONFIG_BT_CLASSIC_ENABLED
     ret = esp_hid_gap_init(ESP_BT_MODE_BTDM);
-#else
-    ret = esp_hid_gap_init(ESP_BT_MODE_BLE);
-#endif
-
     ESP_ERROR_CHECK( ret );
 
     ret = esp_hid_ble_gap_adv_init(ESP_HID_APPEARANCE_GENERIC, hid_config.device_name);
